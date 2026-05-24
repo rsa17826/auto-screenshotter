@@ -1,6 +1,4 @@
 {
-  description = "Python environment for FastAPI, PyTorch, and OpenCV";
-
   inputs = {
     nixpkgs = {
       url = "github:nixos/nixpkgs/nixos-unstable";
