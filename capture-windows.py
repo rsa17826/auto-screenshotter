@@ -39,6 +39,7 @@ import subprocess
 import shutil
 from pathlib import Path
 from datetime import datetime
+from typing import Any
 
 # ── Dependency check ────────────────────────────────────────────────────────
 
@@ -48,7 +49,7 @@ try:
 except ImportError:
   print(
     "\n[capture] Missing Python dependencies.\n"
-    "  Run: pip install Pillow imagehash\n",
+    + "  Run: pip install Pillow imagehash\n",
     file=sys.stderr,
   )
   sys.exit(1)
@@ -107,62 +108,62 @@ def parse_args():
     formatter_class=argparse.RawDescriptionHelpFormatter,
     epilog=__doc__,
   )
-  p.add_argument(
+  _ = p.add_argument(
     "--threshold",
     type=int,
     default=10,
     help="pHash Hamming distance below which two images are 'same' (default: 10). "
-    "Range 0-64. Lower = keep more, higher = keep fewer.",
+    + "Range 0-64. Lower = keep more, higher = keep fewer.",
   )
-  p.add_argument(
+  _ = p.add_argument(
     "--out",
     default=".images",
     help="Output directory relative to cwd (default: .images)",
   )
-  p.add_argument(
+  _ = p.add_argument(
     "--poll",
     type=float,
     default=0.8,
     help="Window-poll interval in seconds (default: 0.8)",
   )
-  p.add_argument(
+  _ = p.add_argument(
     "--delay",
     type=float,
     default=1.8,
     help="Seconds to wait after a new window appears before screenshotting "
-    "(lets the UI finish rendering; default: 1.8)",
+    + "(lets the UI finish rendering; default: 1.8)",
   )
-  p.add_argument(
+  _ = p.add_argument(
     "--prefix",
     default="screenshot",
     help="Filename prefix for saved images (default: screenshot)",
   )
-  p.add_argument(
+  _ = p.add_argument(
     "--retake",
     action="store_true",
     help="Re-screenshot all windows periodically (every --retake-interval s) "
-    "to catch UI state changes",
+    + "to catch UI state changes",
   )
-  p.add_argument(
+  _ = p.add_argument(
     "--retake-interval",
     type=float,
     default=5.0,
     help="How often to retake shots of known windows (default: 5.0s, only with --retake)",
   )
-  p.add_argument(
+  _ = p.add_argument(
     "--shell",
     "-s",
     action="store_true",
     help="Run the command through $SHELL (needed for &&, pipes, cd, etc.). "
-    "Example: --shell -- 'cd ../myapp && go run .'",
+    + "Example: --shell -- 'cd ../myapp && go run .'",
   )
-  p.add_argument(
+  _ = p.add_argument(
     "--cwd",
     default=None,
     help="Working directory for the launched command (default: current dir). "
-    "Example: --cwd ../input-display -- go run .",
+    + "Example: --cwd ../input-display -- go run .",
   )
-  p.add_argument(
+  _ = p.add_argument(
     "command",
     nargs=argparse.REMAINDER,
     help="Command to run (put after --)",
@@ -173,7 +174,7 @@ def parse_args():
 # ── Image deduplication ──────────────────────────────────────────────────────
 
 
-def _compute_hashes(img: Image.Image) -> dict:
+def _compute_hashes(img: Image.Image) -> dict[str, Any]:
   """Compute phash, dhash, and colorhash for an image."""
   return {
     "ph": imagehash.phash(img),
@@ -233,14 +234,14 @@ def is_distinct(
 
 
 def check_linux_deps():
-  missing = []
+  missing: list[str] = []
   for tool in ("xdotool", "import"): # 'import' is part of imagemagick
     if not shutil.which(tool):
       missing.append(tool)
   if missing:
     print(
       f"[capture] Warning: missing tools: {', '.join(missing)}\n"
-      "  Install with: sudo apt install imagemagick xdotool\n"
+      + "  Install with: sudo apt install imagemagick xdotool\n"
     )
 
 
@@ -275,7 +276,7 @@ def get_window_title_linux(wid: str) -> str:
 def screenshot_window_linux(wid: str, outpath: Path) -> bool:
   """Screenshot a specific X11 window. Returns True on success."""
   # Raise and focus the window so it's not occluded
-  subprocess.run(
+  _ = subprocess.run(
     ["xdotool", "windowactivate", "--sync", wid],
     capture_output=True,
     timeout=5,
@@ -327,7 +328,7 @@ def screenshot_window_linux(wid: str, outpath: Path) -> bool:
 
 
 def check_hyprland_deps():
-  missing = []
+  missing: list[str] = []
   if not shutil.which("grim"):
     missing.append("grim")
   if not shutil.which("hyprctl"):
@@ -335,8 +336,8 @@ def check_hyprland_deps():
   if missing:
     print(
       f"[capture] Warning: missing tools: {', '.join(missing)}\n"
-      "  Install with: sudo pacman -S grim\n"
-      "  (hyprctl ships with Hyprland itself)\n"
+      + "  Install with: sudo pacman -S grim\n"
+      + "  (hyprctl ships with Hyprland itself)\n"
     )
 
 
@@ -452,7 +453,7 @@ def get_windows_macos(pid: int) -> list[dict]:
   except ImportError:
     print(
       "[capture] pyobjc-framework-Quartz not found; "
-      "install with: pip install pyobjc-framework-Quartz",
+      + "install with: pip install pyobjc-framework-Quartz",
       file=sys.stderr,
     )
     return []
@@ -504,7 +505,7 @@ def try_capture(
   distinct, new_hashes = is_distinct(tmp_path, existing_hashes, threshold)
   if distinct:
     final_path = out_dir / f"{prefix}_{timestamp}.png"
-    tmp_path.rename(final_path)
+    _ = tmp_path.rename(final_path)
     existing_hashes.append((new_hashes, final_path))
     print(f"[capture]   ✓ Saved → {final_path.name}")
     return True
@@ -521,9 +522,9 @@ def run(args):
   if not cmd:
     print(
       "[capture] Error: no command given.\n"
-      "  Example: python capture-windows.py -- python myapp.py\n"
-      "  Shell:   python capture-windows.py --shell -- 'cd ../app && go run .'\n"
-      "  Alt cwd: python capture-windows.py --cwd ../input-display -- go run .\n",
+      + "  Example: python capture-windows.py -- python myapp.py\n"
+      + "  Shell:   python capture-windows.py --shell -- 'cd ../app && go run .'\n"
+      + "  Alt cwd: python capture-windows.py --cwd ../input-display -- go run .\n",
       file=sys.stderr,
     )
     sys.exit(1)
@@ -565,8 +566,8 @@ def run(args):
   elif backend == "wayland-generic":
     print(
       "[capture] Non-Hyprland Wayland detected. Only Hyprland is fully supported.\n"
-      "  If you're on Sway/river/etc., open an issue — the grim backend\n"
-      "  can likely be adapted. Trying X11 fallback (may not work)…\n"
+      + "  If you're on Sway/river/etc., open an issue — the grim backend\n"
+      + "  can likely be adapted. Trying X11 fallback (may not work)…\n"
     )
     backend = "x11"
   elif backend == "unsupported":
@@ -746,7 +747,7 @@ def run(args):
     print("\n[capture] Interrupted by user.")
     proc.terminate()
 
-  proc.wait()
+  _ = proc.wait()
   print(
     f"\n[capture] Finished.  Saved: {saved}  |  Deduplicated/skipped: {skipped}\n"
     + f"[capture] Images in: {out_dir.resolve()}"
@@ -758,15 +759,15 @@ def run(args):
 if __name__ == "__main__":
   if not os.path.isfile(".gitignore"):
     with open(".gitignore", "w") as f:
-      f.write(".images\n")
+      _ = f.write(".images\n")
   else:
     # Use "a+" to read and append
     with open(".gitignore", "a+") as f:
-      f.seek(0) # Move the cursor to the beginning to read the file
+      _ = f.seek(0) # Move the cursor to the beginning to read the file
       lines = f.read().splitlines()
 
       if ".images" not in lines:
         # Add a newline before if the file doesn't end in one
-        f.write("\n.images\n")
+        _ = f.write("\n.images\n")
 
   run(parse_args())
