@@ -31,7 +31,7 @@
       in
       {
         packages = {
-          default = pkgs.writers.writePythonBin "auto-screenshotter" {
+          default = pkgs.writers.writePython3Bin "auto-screenshotter" {
             libraries = pythonLibs pkgs.python3Packages;
           } (builtins.readFile ./capture-windows.py);
         };
