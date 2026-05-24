@@ -21,14 +21,21 @@
           inherit system;
         };
 
-        pythonEnv = pkgs.python312.withPackages (
+        pythonLibs =
           ps: with ps; [
             pillow
             imagehash
-          ]
-        );
+          ];
+
+        pythonEnv = pkgs.python3.withPackages pythonLibs;
       in
       {
+        packages = {
+          default = pkgs.writers.writePythonBin "auto-screenshotter" {
+            libraries = pythonLibs pkgs.python3Packages;
+          } (builtins.readFile ./capture-windows.py);
+        };
+
         devShells = {
           default = pkgs.mkShell {
             buildInputs = [ pythonEnv ];
